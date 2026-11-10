@@ -1,4 +1,4 @@
-FROM node:22.22.2-trixie-slim AS builder
+FROM node:24-slim AS builder
 WORKDIR /app
 
 RUN apt-get update \
@@ -13,7 +13,7 @@ RUN if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm inst
 COPY . ./
 RUN mkdir -p /app/data && npm run build -- --webpack
 
-FROM node:22.22.2-trixie-slim AS runner-base
+FROM node:24-slim AS runner-base
 WORKDIR /app
 
 LABEL org.opencontainers.image.title="omniroute" \
@@ -46,7 +46,7 @@ COPY --from=builder /app/node_modules/pino-pretty ./node_modules/pino-pretty
 COPY --from=builder /app/node_modules/split2 ./node_modules/split2
 COPY --from=builder /app/scripts/run-standalone.mjs ./run-standalone.mjs
 COPY --from=builder /app/scripts/runtime-env.mjs ./runtime-env.mjs
-COPY --from=builder /app/scripts/bootstrap-env.mjs ./bootstrap-env.mjs
+COPY --from=builder /app/scripts/bootstrap-env.mjs ./scripts/bootstrap-env.mjs
 COPY --from=builder /app/scripts/healthcheck.mjs ./healthcheck.mjs
 
 EXPOSE 20128
@@ -66,3 +66,4 @@ RUN apt-get update \
 
 # Install CLI tools globally. Separate layer from apt for better cache reuse.
 RUN npm install -g --no-audit --no-fund @openai/codex @anthropic-ai/claude-code droid openclaw@latest
+
